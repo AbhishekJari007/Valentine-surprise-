@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>For You, Madhav</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            overflow: hidden;
+            background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+            touch-action: manipulation;
+        }
+        
+        .valentine-font {
+            font-family: 'Dancing Script', cursive;
+        }
+
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: linear-gradient(to bottom, #ffdde1, #ee9ca7);
+        }
+
+        .heart-beat {
+            animation: beat 1.2s infinite;
+        }
+
+        @keyframes beat {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .card-enter {
+            animation: slideUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .btn-run {
+            transition: top 0.2s ease, left 0.2s ease; /* Smooth movement */
+            position: relative;
+        }
+
+        .envelope-wrapper {
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        .envelope-wrapper:hover {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body class="h-screen w-screen flex items-center justify-center">
+
+    <!-- Background Animation Canvas -->
+    <canvas id="bg-canvas"></canvas>
+
+    <!-- Main Container -->
+    <div id="app-container" class="relative z-10 w-full max-w-md px-4">
+        
+        <!-- Stage 1: The Envelope -->
+        <div id="stage-envelope" class="bg-white/80 backdrop-blur-md rounded-3xl shadow-2xl p-8 text-center card-enter border border-white/50">
+            <div class="envelope-wrapper mb-6 inline-block" onclick="nextStage(1)">
+                <div class="text-8xl text-red-500 heart-beat">💌</div>
+                <p class="mt-4 text-gray-600 text-sm animate-pulse">Tap to open</p>
+            </div>
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">A Message for <span class="text-pink-600">Madhav</span></h1>
+            <p class="text-gray-600">Someone has sent you a special surprise...</p>
+        </div>
+
+        <!-- Stage 2: The Question -->
+        <div id="stage-question" class="hidden bg-white/90 backdrop-blur-md rounded-3xl shadow-2xl p-8 text-center border border-white/50 min-h-[450px] flex-col justify-center items-center relative overflow-hidden">
+            <div class="text-6xl mb-4">🌹</div>
+            <h1 class="valentine-font text-5xl text-red-500 mb-6">Dear Madhav,</h1>
+            <p class="text-xl text-gray-700 mb-8 font-bold">Will you be my Valentine?</p>
+            
+            <!-- Buttons Area -->
+            <div id="buttons-container" class="w-full flex justify-center items-center gap-4 static">
+                <button onclick="nextStage(2)" class="px-8 py-3 bg-red-500 text-white rounded-full font-bold shadow-lg hover:bg-red-600 transform transition hover:scale-110 z-20 whitespace-nowrap">
+                    Yes, Absolutely! 💖
+                </button>
+                
+                <button id="no-btn" onmouseover="moveButton()" ontouchstart="moveButton()" onclick="moveButton()" class="btn-run px-8 py-3 bg-gray-200 text-gray-600 rounded-full font-bold shadow-md z-30 whitespace-nowrap">
+                    No 🙈
+                </button>
+            </div>
+        </div>
+
+        <!-- Stage 3: Success -->
+        <div id="stage-success" class="hidden text-center">
+            <div class="bg-white/90 backdrop-blur-md rounded-3xl shadow-2xl p-8 border-4 border-pink-300 transform scale-100 transition-all duration-500">
+                <h1 class="text-6xl mb-4">🥰</h1>
+                <h1 class="valentine-font text-5xl text-pink-600 mb-4">Yay!</h1>
+                <p class="text-2xl text-gray-800 mb-4">You've made me the happiest person!</p>
+                <p class="text-lg text-gray-600">Happy Valentine's Day, Madhav! ❤️</p>
+                <div class="mt-8 text-sm text-gray-400">
+                    (Take a screenshot & send it back to me!)
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- Logic for the "No" button running away ---
+        const noBtn = document.getElementById('no-btn');
+        const container = document.getElementById('stage-question');
+        
+        // Infinite list of pleading messages
+        const texts = [
+            "No 🙈", 
+            "Really?", 
+            "Think again!", 
+            "Please...", 
+            "Don't do this!", 
+            "Are you sure?", 
+            "Look at my sad face 🥺", 
+            "Just click Yes!", 
+            "I'm warning you...", 
+            "Wrong button!",
+            "Have a heart! ❤️",
+            "Pretty please?",
+            "Last chance!",
+            "You're breaking my heart 💔",
+            "Whyyyy?",
+            "Try the other one!",
+            "Don't be like that!",
+            "Madhav, pls!",
+            "Okay, I'll cry...",
+            "Click Yes to stop this!"
+        ];
+
+        function moveButton() {
+            // Ensure button is absolute for free movement inside container
+            if (noBtn.style.position !== 'absolute') {
+                noBtn.style.position = 'absolute';
+            }
+
+            // Get dimensions
+            const containerRect = container.getBoundingClientRect();
+            const btnRect = noBtn.getBoundingClientRect();
+            
+            // Calculate safe area: Container Width - Button Width (minus padding)
+            // We use a padding of 20px so it doesn't touch the exact edge
+            const padding = 20;
+            const maxX = containerRect.width - btnRect.width - padding;
+            const maxY = containerRect.height - btnRect.height - padding;
+
+            // Generate random coordinates within the safe zone
+            const newLeft = Math.max(padding, Math.random() * maxX);
+            const newTop = Math.max(padding, Math.random() * maxY);
+
+            // Apply new position
+            noBtn.style.left = `${newLeft}px`;
+            noBtn.style.top = `${newTop}px`;
+            
+            // Change text randomly from the list
+            const randomText = texts[Math.floor(Math.random() * texts.length)];
+            noBtn.innerText = randomText;
+            
+            // Visual feedback: Change color slightly to show it's "active/panicked"
+            noBtn.style.backgroundColor = '#f3f4f6'; // Keep it gray-ish
+            noBtn.style.transform = `scale(${0.9 + Math.random() * 0.2})`; // Wiggle size slightly
+        }
+
+        // --- Stage Management ---
+        function nextStage(current) {
+            if (current === 1) {
+                document.getElementById('stage-envelope').style.display = 'none';
+                const qStage = document.getElementById('stage-question');
+                qStage.style.display = 'flex'; // Use flex to center content
+                qStage.classList.add('card-enter');
+            } else if (current === 2) {
+                document.getElementById('stage-question').style.display = 'none';
+                const sStage = document.getElementById('stage-success');
+                sStage.style.display = 'block';
+                sStage.classList.add('card-enter');
+                startConfetti();
+            }
+        }
+
+        // --- Background & Confetti Animation ---
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let particles = [];
+        let confettiParticles = [];
+        let isConfettiActive = false;
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
+        class Heart {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = height + Math.random() * 100;
+                this.velY = -1 * (Math.random() * 2 + 0.5);
+                this.size = Math.random() * 20 + 5;
+                this.opacity = Math.random() * 0.5 + 0.1;
+                this.color = `rgba(255, ${Math.floor(Math.random() * 100)}, ${Math.floor(Math.random() * 100)}, ${this.opacity})`;
+                this.rotation = Math.random() * Math.PI * 2;
+                this.rotationSpeed = (Math.random() - 0.5) * 0.02;
+            }
+
+            update() {
+                this.y += this.velY;
+                this.rotation += this.rotationSpeed;
+                if (this.y < -50) {
+                    this.y = height + 50;
+                    this.x = Math.random() * width;
+                }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.rotation);
+                ctx.fillStyle = this.color;
+                ctx.font = `${this.size}px Arial`;
+                ctx.fillText('❤', 0, 0);
+                ctx.restore();
+            }
+        }
+
+        class ConfettiPiece {
+            constructor() {
+                this.x = width / 2;
+                this.y = height / 2;
+                this.vx = (Math.random() - 0.5) * 20;
+                this.vy = (Math.random() - 0.5) * 20 - 5; 
+                this.gravity = 0.5;
+                this.color = `hsl(${Math.random() * 360}, 100%, 50%)`;
+                this.size = Math.random() * 10 + 5;
+                this.rotation = Math.random() * 360;
+            }
+            
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vy += this.gravity;
+                this.rotation += 5;
+            }
+            
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.rotation * Math.PI / 180);
+                ctx.fillStyle = this.color;
+                ctx.fillRect(-this.size/2, -this.size/2, this.size, this.size);
+                ctx.restore();
+            }
+        }
+
+        function startConfetti() {
+            isConfettiActive = true;
+            for (let i = 0; i < 150; i++) {
+                confettiParticles.push(new ConfettiPiece());
+            }
+        }
+
+        // Initialize Background Hearts
+        for (let i = 0; i < 50; i++) {
+            particles.push(new Heart());
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+            
+            // Draw background hearts
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+
+            // Draw confetti if active
+            if (isConfettiActive) {
+                for (let i = confettiParticles.length - 1; i >= 0; i--) {
+                    const p = confettiParticles[i];
+                    p.update();
+                    p.draw();
+                    if (p.y > height) confettiParticles.splice(i, 1);
+                }
+            }
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+    </script>
+</body>
+</html>
+
